@@ -1,0 +1,76 @@
+name: CI
+concurrency: 
+  group: demo
+  cancel-in-progress: false
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    runs-on: ${{ matrix.os }}
+    outputs:
+      output1: ${{ steps.stepe.outputs.test }}
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - '1.0'
+          - '1.8'
+          - 'nightly'
+        os:
+          - ubuntu-latest
+        arch:
+          - x64
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@v1
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+      - uses: julia-actions/cache@v1
+      - uses: julia-actions/julia-buildpkg@v1
+      - uses: julia-actions/julia-runtest@v1
+      - id: stepe
+        run: echo "test=hello" >> $GITHUB_OUTPUT    
+  start:
+     needs: [test]
+     runs-on: ubuntu-latest
+     outputs:
+      output1: ${{ steps.step1.outputs.test }}
+      output2: ${{ steps.step2.outputs.test }}
+     steps:
+      - id: step1
+        run: echo "test=hello" >> $GITHUB_OUTPUT
+      - id: step2
+        run: echo "test=world" >> $GITHUB_OUTPUT
+  build:
+    needs: [start]
+    runs-on: ubuntu-latest
+    outputs:
+      output1: ${{ steps.stepc.outputs.test }}
+      output2: ${{ steps.stepd.outputs.test }}
+    steps:
+      - uses: actions/checkout@v3
+      - id: stepc
+        run: echo Hello, world!
+      - id: stepd
+        run: |
+          echo Add other actions to build,
+          echo test, and deploy your project.
+  prod_ready:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run a one-line script
+        run: echo Hello, world!
+      - name: Run a multi-line script
+        run: |
+          echo Add other actions to build,
+          echo test, and deploy your project.
