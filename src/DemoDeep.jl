@@ -1,5 +1,5 @@
 module DemoDeep
 
-# Write your package code here.
+greet() = println("Hello DemoDeep!")
 
 end
